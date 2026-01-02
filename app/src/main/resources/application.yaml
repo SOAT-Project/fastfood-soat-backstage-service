@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: FastFood SOAT - Backstage
+
+message:
+  order: orders.fifo
+  order-status: order-status-events
+
+cloud:
+  aws:
+    region:
+      static: AWS_REGION_EXAMPLE
+    credentials:
+      access-key: ACCESS_KEY_ID_EXAMPLE
+      secret-key: SECRET_ACCESS_KEY_EXAMPLE
