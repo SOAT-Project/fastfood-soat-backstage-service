@@ -3,8 +3,11 @@ package soat.fastfood.backstage.adapter.outbound.dynamodb.mapper;
 import soat.fastfood.backstage.adapter.outbound.dynamodb.model.WorkOrderDynamoDB;
 import soat.fastfood.backstage.adapter.outbound.dynamodb.model.WorkOrderItemDynamoDB;
 import soat.fastfood.backstage.application.domain.workorder.WorkOrder;
+import soat.fastfood.backstage.application.domain.workorder.WorkOrderID;
 import soat.fastfood.backstage.application.domain.workorder.WorkOrderItem;
+import soat.fastfood.backstage.application.domain.workorder.WorkOrderStatus;
 
+import java.time.Instant;
 import java.util.List;
 
 public final class WorkOrderDynamoDBMapper {
@@ -34,5 +37,29 @@ public final class WorkOrderDynamoDBMapper {
         workOrderItemDynamoDB.setName(workOrderItem.getName());
         workOrderItemDynamoDB.setQuantity(workOrderItem.getQuantity());
         return workOrderItemDynamoDB;
+    }
+
+    public static WorkOrder toDomain(final WorkOrderDynamoDB workOrderDynamoDB) {
+        return WorkOrder.with(
+                WorkOrderID.from(workOrderDynamoDB.getId()),
+                workOrderDynamoDB.getOrderNumber(),
+                WorkOrderStatus.from(workOrderDynamoDB.getStatus()),
+                workOrderDynamoDB.getCreatedAt() != null ? Instant.parse(workOrderDynamoDB.getCreatedAt()) : null,
+                workOrderDynamoDB.getUpdatedAt() != null ? Instant.parse(workOrderDynamoDB.getUpdatedAt()) : null,
+                toDomain(workOrderDynamoDB.getItems())
+        );
+    }
+
+    public static List<WorkOrderItem> toDomain(final List<WorkOrderItemDynamoDB> itemsDynamoDB) {
+        return itemsDynamoDB.stream()
+                .map(WorkOrderDynamoDBMapper::toDomain)
+                .toList();
+    }
+
+    public static WorkOrderItem toDomain(final WorkOrderItemDynamoDB workOrderItemDynamoDB) {
+        return WorkOrderItem.create(
+                workOrderItemDynamoDB.getName(),
+                workOrderItemDynamoDB.getQuantity()
+        );
     }
 }
