@@ -1,3 +1,7 @@
+server:
+  servlet:
+    context-path: /backstage
+
 spring:
   application:
     name: FastFood SOAT - Backstage

@@ -1,4 +1,4 @@
-package soat.fastfood.backstage.application.usecase.receiveorder;
+package soat.fastfood.backstage.application.usecase.create;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,12 +12,12 @@ import soat.fastfood.backstage.application.port.WorkOrderPort;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class DefaultReceiveWorkOrderUseCase extends ReceiveWorkOrderUseCase {
+public class DefaultCreateWorkOrderUseCase extends CreateWorkOrderUseCase {
 
     private final WorkOrderPort workOrderPort;
 
     @Override
-    public void execute(final ReceiveWorkOrderCommand command) {
+    public void execute(final CreateWorkOrderCommand command) {
         final var orderId = command.id();
         final var orderNumber = command.orderNumber();
         final var orderItems = command.items();
