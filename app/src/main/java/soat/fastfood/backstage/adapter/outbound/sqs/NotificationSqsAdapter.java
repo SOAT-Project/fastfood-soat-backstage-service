@@ -28,9 +28,15 @@ public class NotificationSqsAdapter implements NotificationPort {
                 status.name()
         );
 
-        this.sqsTemplate.send(to -> to
+        final var result = this.sqsTemplate.send(to -> to
                 .queue(queue)
                 .payload(new Data<>(workOrderStatusNotification))
+        );
+
+        log.info("Sent work order status update notification for WorkOrderID: {} with status: {}. MessageId: {}",
+                workOrderId.getValue(),
+                status.name(),
+                result.messageId()
         );
     }
 

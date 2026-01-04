@@ -18,7 +18,7 @@ public final class WorkOrderDynamoDBMapper {
     public static WorkOrderDynamoDB fromDomain(final WorkOrder workOrder) {
         final var workOrderDynamoDB = new WorkOrderDynamoDB();
         workOrderDynamoDB.setId(workOrder.getId().getValue());
-        workOrderDynamoDB.setOrderNumber(workOrderDynamoDB.getOrderNumber());
+        workOrderDynamoDB.setOrderNumber(workOrder.getOrderNumber());
         workOrderDynamoDB.setStatus(workOrder.getStatus().name());
         workOrderDynamoDB.setCreatedAt(workOrder.getCreatedAt().toString());
         workOrderDynamoDB.setUpdatedAt(workOrder.getUpdatedAt().toString());
@@ -40,14 +40,18 @@ public final class WorkOrderDynamoDBMapper {
     }
 
     public static WorkOrder toDomain(final WorkOrderDynamoDB workOrderDynamoDB) {
-        return WorkOrder.with(
-                WorkOrderID.from(workOrderDynamoDB.getId()),
-                workOrderDynamoDB.getOrderNumber(),
-                WorkOrderStatus.from(workOrderDynamoDB.getStatus()),
-                workOrderDynamoDB.getCreatedAt() != null ? Instant.parse(workOrderDynamoDB.getCreatedAt()) : null,
-                workOrderDynamoDB.getUpdatedAt() != null ? Instant.parse(workOrderDynamoDB.getUpdatedAt()) : null,
-                toDomain(workOrderDynamoDB.getItems())
-        );
+        try {
+            return WorkOrder.with(
+                    WorkOrderID.from(workOrderDynamoDB.getId()),
+                    workOrderDynamoDB.getOrderNumber(),
+                    WorkOrderStatus.from(workOrderDynamoDB.getStatus()),
+                    workOrderDynamoDB.getCreatedAt() != null ? Instant.parse(workOrderDynamoDB.getCreatedAt()) : null,
+                    workOrderDynamoDB.getUpdatedAt() != null ? Instant.parse(workOrderDynamoDB.getUpdatedAt()) : null,
+                    toDomain(workOrderDynamoDB.getItems())
+            );
+        } catch (final Exception e) {
+            throw new IllegalStateException("Error mapping WorkOrderDynamoDB to WorkOrder", e);
+        }
     }
 
     public static List<WorkOrderItem> toDomain(final List<WorkOrderItemDynamoDB> itemsDynamoDB) {
