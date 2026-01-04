@@ -61,6 +61,26 @@ jobs:
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
 
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      - name: Cache Maven
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.m2/repository
+            ~/.m2/wrapper
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Compile project
+        run: ./mvnw clean compile test-compile --no-transfer-progress
+        working-directory: ./app
+
       - name: Download Java coverage artifact
         uses: actions/download-artifact@v4
         with:
@@ -73,7 +93,6 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: app
-          qualityGate: true
 
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
