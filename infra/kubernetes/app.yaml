@@ -1,0 +1,158 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: backstage
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backstage
+  namespace: backstage
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backstage-service
+  namespace: backstage
+spec:
+  selector:
+    app: backstage
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstage
+  namespace: backstage
+spec:
+  selector:
+    matchLabels:
+      app: backstage
+  template:
+    metadata:
+      labels:
+        app: backstage
+    spec:
+      serviceAccountName: backstage
+      containers:
+        - name: backstage
+          image: soatproject/fastfood-soat-backstage-service:latest
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: backstage-configmap
+            - secretRef:
+                name: backstage-secret
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "1"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /backstage/api/actuator/health/liveness
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 10
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /backstage/api/actuator/health/readiness
+              port: 8080
+            initialDelaySeconds: 90
+            periodSeconds: 5
+            failureThreshold: 3
+---
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: allow-default-to-backstage
+  namespace: backstage
+spec:
+  from:
+    - group: gateway.networking.k8s.io
+      kind: HTTPRoute
+      namespace: default
+  to:
+    - group: ""
+      kind: Service
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: backstage
+  namespace: default
+spec:
+  parentRefs:
+    - name: eg
+      namespace: default
+  rules:
+    - backendRefs:
+        - group: ""
+          kind: Service
+          name: backstage-service
+          namespace: backstage
+          port: 80
+          weight: 1
+      matches:
+        - path:
+            type: PathPrefix
+            value: /backstage
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backstage-configmap
+  namespace: backstage
+data:
+  # Spring Boot Configuration
+  SPRING_APPLICATION_NAME: "FastFood SOAT - Backstage"
+  SERVER_SERVLET_CONTEXT_PATH: "/backstage"
+
+  # Message Queue Configuration
+  MESSAGE_ORDER: "fastfood-soat-terraform-order-to-kitchen.fifo"
+  MESSAGE_ORDER_STATUS: "fastfood-soat-terraform-kitchen-to-order"
+---
+#apiVersion: v1
+#kind: Secret
+#metadata:
+#  name: backstage-secret
+#  namespace: backstage
+#type: Opaque
+#stringData:
+#  # AWS SDK Standard Variables
+#  AWS_REGION: "region-example"
+#  AWS_ACCESS_KEY_ID: "access-key-id-example"
+#  AWS_SECRET_ACCESS_KEY: "secret-access-key-example"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backstage-hpa
+  namespace: backstage
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backstage
+  minReplicas: 3
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 50
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 70

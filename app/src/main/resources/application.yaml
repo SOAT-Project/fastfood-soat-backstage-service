@@ -1,19 +1,33 @@
 server:
   servlet:
-    context-path: /backstage
+    context-path: ${SERVER_SERVLET_CONTEXT_PATH:/backstage}
 
 spring:
   application:
-    name: FastFood SOAT - Backstage
+    name: ${SPRING_APPLICATION_NAME:FastFood SOAT - Backstage}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /api/actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
 
 message:
-  order: orders.fifo
-  order-status: order-status-events
+  order: ${MESSAGE_ORDER:orders.fifo}
+  order-status: ${MESSAGE_ORDER_STATUS:order-status-events}
 
 cloud:
   aws:
     region:
-      static: AWS_REGION_EXAMPLE
-    credentials:
-      access-key: ACCESS_KEY_ID_EXAMPLE
-      secret-key: SECRET_ACCESS_KEY_EXAMPLE
+      static: ${AWS_REGION:us-east-1}

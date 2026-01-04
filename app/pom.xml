@@ -46,6 +46,12 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 
+        <!-- Spring Boot Actuator -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-actuator</artifactId>
+		</dependency>
+
         <!-- Spring Boot Cloud AWS -->
         <dependency>
             <groupId>io.awspring.cloud</groupId>
