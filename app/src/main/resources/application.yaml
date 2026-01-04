@@ -24,8 +24,8 @@ management:
       enabled: true
 
 message:
-  order: ${MESSAGE_ORDER:orders.fifo}
-  order-status: ${MESSAGE_ORDER_STATUS:order-status-events}
+  order: ${MESSAGE_ORDER:fastfood-soat-terraform-order-to-kitchen.fifo}
+  order-status: ${MESSAGE_ORDER_STATUS:fastfood-soat-terraform-kitchen-to-order}
 
 cloud:
   aws:

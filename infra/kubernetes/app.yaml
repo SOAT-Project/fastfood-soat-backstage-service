@@ -130,7 +130,7 @@ data:
 #  AWS_REGION: "region-example"
 #  AWS_ACCESS_KEY_ID: "access-key-id-example"
 #  AWS_SECRET_ACCESS_KEY: "secret-access-key-example"
----
+#---
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
