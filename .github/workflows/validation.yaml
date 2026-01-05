@@ -2,9 +2,9 @@ name: CI Test & Docker Build Validation
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, release, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, release, develop ]
     types: [ opened, synchronize, reopened ]
 
 env:
