@@ -6,7 +6,7 @@ resource "kubernetes_manifest" "backstage_service_account" {
   manifest = yamldecode(file("${path.module}/../kubernetes/service-account.yaml"))
 }
 
-resource "kubernetes_manifest" "backstage_service_account" {
+resource "kubernetes_manifest" "backstage_service" {
   manifest = yamldecode(file("${path.module}/../kubernetes/service.yaml"))
 }
 
