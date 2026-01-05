@@ -1,18 +1,29 @@
-# Aplica todo o manifesto YAML com múltiplos documentos
-resource "kubectl_manifest" "backstage" {
-  yaml_body = file("${path.module}/../kubernetes/app.yaml")
+resource "kubernetes_manifest" "backstage_namespace" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/namespace.yaml"))
+}
 
-  # Aguarda todos os recursos serem criados
-  wait = true
+resource "kubernetes_manifest" "backstage_service_account" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/service-account.yaml"))
+}
 
-  # Aguarda o rollout do deployment
-  wait_for_rollout = true
+resource "kubernetes_manifest" "backstage_service_account" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/service.yaml"))
+}
 
-  # Sobrescreve os recursos se já existirem
-  force_conflicts = true
+resource "kubernetes_manifest" "backstage_deployment" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/deployment.yaml"))
+}
 
-  # Aplica mudanças no servidor
-  server_side_apply = true
+resource "kubernetes_manifest" "backstage_http_route" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/http-route.yaml"))
+}
+
+resource "kubernetes_manifest" "backstage_configmap" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/configmap.yaml"))
+}
+
+resource "kubernetes_manifest" "backstage_hpa" {
+  manifest = yamldecode(file("${path.module}/../kubernetes/hpa.yaml"))
 }
 
 # Secret com credenciais AWS (criado após o namespace)
@@ -31,5 +42,5 @@ resource "kubernetes_secret" "backstage_secret" {
   type = "Opaque"
 
   # Garante que o namespace existe antes de criar o secret
-  depends_on = [kubectl_manifest.backstage]
+  depends_on = [kubernetes_manifest.backstage_namespace]
 }
