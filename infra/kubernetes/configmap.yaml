@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backstage-configmap
+  namespace: backstage
+data:
+  # Spring Boot Configuration
+  SPRING_APPLICATION_NAME: "FastFood SOAT - Backstage"
+  SERVER_SERVLET_CONTEXT_PATH: "/backstage"
+
+  # Message Queue Configuration
+  MESSAGE_ORDER: "fastfood-soat-terraform-order-to-kitchen.fifo"
+  MESSAGE_ORDER_STATUS: "fastfood-soat-terraform-kitchen-to-order"
