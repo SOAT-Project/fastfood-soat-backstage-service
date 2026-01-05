@@ -91,7 +91,7 @@ metadata:
 spec:
   parentRefs:
     - name: eg
-      namespace: default
+      namespace: envoy-gateway-system
   rules:
     - backendRefs:
         - group: ""
