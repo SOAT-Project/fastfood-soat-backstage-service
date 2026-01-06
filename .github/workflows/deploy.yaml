@@ -52,7 +52,7 @@ jobs:
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
 
   deploy:
-    needs: set_environment
+    needs: [set_environment, build]
     if: success() && needs.set_environment.outputs.mapped_environment != ''
     uses: ./.github/workflows/terraform.yaml
     with:
