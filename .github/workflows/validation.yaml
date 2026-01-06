@@ -8,7 +8,7 @@ on:
 env:
   DOCKER_IMAGE_NAME: ${{ github.repository }}
   JAVA_PROJECT_PATH: ./app
-  SONAR_PROJECT_KEY: 'kaykyfreitas_fastfood-soat-backstage-service'
+  SONAR_PROJECT_KEY: 'SOAT-Project_fastfood-soat-backstage-service'
 
 
 jobs:
