@@ -45,8 +45,8 @@ jobs:
     if: success() && needs.set_environment.outputs.mapped_environment != ''
     uses: ./.github/workflows/docker.yaml
     with:
-      image_name: "latest"
-      image_tag: ${{ needs.set_environment.outputs.mapped_environment }}
+      image_name: soatproject/fastfood-soat-backstage-service
+      image_tag: latest
     secrets:
       DOCKERHUB_LOGIN: ${{ secrets.DOCKERHUB_LOGIN }}
       DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
