@@ -40,6 +40,17 @@ jobs:
           echo "environment=$ENVIRONMENT" >> $GITHUB_OUTPUT
           echo "Ambiente mapeado: $ENVIRONMENT"
 
+  build:
+    needs: set_environment
+    if: success() && needs.set_environment.outputs.mapped_environment != ''
+    uses: ./.github/workflows/docker.yaml
+    with:
+      image_name: "latest"
+      image_tag: ${{ needs.set_environment.outputs.mapped_environment }}
+    secrets:
+      DOCKERHUB_LOGIN: ${{ secrets.DOCKERHUB_LOGIN }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+
   deploy:
     needs: set_environment
     if: success() && needs.set_environment.outputs.mapped_environment != ''
