@@ -51,8 +51,10 @@ public class WorkOrderValidator extends Validator {
 
     private void validateCreatedAt() {
         final var createdAt = this.workOrder.getCreatedAt();
-        if (isNull(createdAt))
+        if (isNull(createdAt)) {
             this.validationHandler().append(new Error("'createdAt' should not be null"));
+            return;
+        }
 
         if (createdAt.isAfter(this.workOrder.getUpdatedAt()))
             this.validationHandler().append(new Error("'createdAt' should not be after 'updatedAt'"));
@@ -60,8 +62,10 @@ public class WorkOrderValidator extends Validator {
 
     private void validateUpdatedAt() {
         final var updatedAt = this.workOrder.getUpdatedAt();
-        if (isNull(updatedAt))
+        if (isNull(updatedAt)) {
             this.validationHandler().append(new Error("'updatedAt' should not be null"));
+            return;
+        }
 
         if (updatedAt.isBefore(this.workOrder.getCreatedAt()))
             this.validationHandler().append(new Error("'updatedAt' should not be before 'createdAt'"));
