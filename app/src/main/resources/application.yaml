@@ -1,0 +1,33 @@
+server:
+  servlet:
+    context-path: ${SERVER_SERVLET_CONTEXT_PATH:/backstage}
+
+spring:
+  application:
+    name: ${SPRING_APPLICATION_NAME:FastFood SOAT - Backstage}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /api/actuator
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  health:
+    livenessstate:
+      enabled: true
+    readinessstate:
+      enabled: true
+
+message:
+  order: ${MESSAGE_ORDER:fastfood-soat-terraform-order-to-kitchen.fifo}
+  order-status: ${MESSAGE_ORDER_STATUS:fastfood-soat-terraform-kitchen-to-order}
+
+cloud:
+  aws:
+    region:
+      static: ${AWS_REGION:us-east-1}
