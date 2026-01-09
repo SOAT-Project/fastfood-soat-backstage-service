@@ -86,11 +86,11 @@ jobs:
           path: ./app/target/site/jacoco/
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
           projectBaseDir: app
+        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=SOAT-Project_fastfood-soat-backstage-service
 
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
