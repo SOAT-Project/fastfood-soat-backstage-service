@@ -2,7 +2,7 @@ name: CI Test & Docker Build Validation
 
 on:
   pull_request:
-    branches: [ main, release, develop ]
+    branches: [ main ]
     types: [ opened, synchronize, reopened ]
 
 env:
@@ -86,18 +86,17 @@ jobs:
           path: ./app/target/site/jacoco/
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: app
+        run: mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=SOAT-Project_fastfood-soat-backstage-service
+        working-directory: ./app
 
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
         uses: sonarsource/sonarqube-quality-gate-action@master
         with:
           pollingTimeoutSec: 600
-          scanMetadataReportFile: ./app/.scannerwork/report-task.txt
+          scanMetadataReportFile: app/target/sonar/report-task.txt
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
