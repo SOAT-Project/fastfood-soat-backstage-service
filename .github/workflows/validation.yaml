@@ -88,9 +88,8 @@ jobs:
       - name: SonarQube Scan
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        with:
-          projectBaseDir: app
-        run: mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=SOAT-Project_fastfood-soat-backstage-service
+        run: ./mvnw -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Dsonar.projectKey=SOAT-Project_fastfood-soat-backstage-service --no-transfer-progress
+        working-directory: ./app
 
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
