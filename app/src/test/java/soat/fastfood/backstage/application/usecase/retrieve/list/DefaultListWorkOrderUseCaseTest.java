@@ -118,10 +118,10 @@ class DefaultListWorkOrderUseCaseTest {
     @Test
     void shouldListWorkOrdersByDeliveredStatus() {
         // Given
-        final var command = new ListWorkOrderCommand("DELIVERED");
+        final var command = new ListWorkOrderCommand("COMPLETED");
         final var workOrders = List.of(workOrder1, workOrder2, workOrder3);
         
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.DELIVERED))
+        when(workOrderPort.findAllByStatus(WorkOrderStatus.COMPLETED))
                 .thenReturn(workOrders);
 
         // When
@@ -131,7 +131,7 @@ class DefaultListWorkOrderUseCaseTest {
         assertNotNull(result);
         assertEquals(3, result.size());
         
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.DELIVERED);
+        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.COMPLETED);
     }
 
     @Test
@@ -335,8 +335,8 @@ class DefaultListWorkOrderUseCaseTest {
         useCase.execute(commandReady);
 
         // Test DELIVERED
-        final var commandDelivered = new ListWorkOrderCommand("DELIVERED");
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.DELIVERED))
+        final var commandDelivered = new ListWorkOrderCommand("COMPLETED");
+        when(workOrderPort.findAllByStatus(WorkOrderStatus.COMPLETED))
                 .thenReturn(Collections.emptyList());
         useCase.execute(commandDelivered);
 
@@ -344,7 +344,7 @@ class DefaultListWorkOrderUseCaseTest {
         verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
         verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
         verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.READY);
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.DELIVERED);
+        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.COMPLETED);
     }
 }
 
