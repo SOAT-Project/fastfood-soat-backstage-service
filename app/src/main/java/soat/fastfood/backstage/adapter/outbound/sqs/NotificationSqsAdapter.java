@@ -25,7 +25,6 @@ public class NotificationSqsAdapter implements NotificationPort {
     @Value("${message.order-status}")
     private String queue;
 
-    private final SqsTemplate sqsTemplate;
     private final SqsClient sqsClient;
     private final ObjectMapper objectMapper;
 
