@@ -77,14 +77,14 @@ class DefaultUpdateWorkOrderUseCaseTest {
     @Test
     void shouldUpdateWorkOrderStatusToDeliveredSuccessfully() {
         // Given
-        final var command = new UpdateWorkOrderCommand(validWorkOrderId, "DELIVERED");
+        final var command = new UpdateWorkOrderCommand(validWorkOrderId, "COMPLETED");
 
         // When
         assertDoesNotThrow(() -> useCase.execute(command));
 
         // Then
-        verify(workOrderPort, times(1)).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.DELIVERED));
-        verify(notificationPort, times(1)).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.DELIVERED));
+        verify(workOrderPort, times(1)).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.COMPLETED));
+        verify(notificationPort, times(1)).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.COMPLETED));
     }
 
     @Test
@@ -238,7 +238,7 @@ class DefaultUpdateWorkOrderUseCaseTest {
     void shouldUpdateWorkOrderWithUUIDFormat() {
         // Given
         final var uuidId = "550e8400-e29b-41d4-a716-446655440000";
-        final var command = new UpdateWorkOrderCommand(uuidId, "DELIVERED");
+        final var command = new UpdateWorkOrderCommand(uuidId, "COMPLETED");
 
         // When
         assertDoesNotThrow(() -> useCase.execute(command));
@@ -296,7 +296,7 @@ class DefaultUpdateWorkOrderUseCaseTest {
         final var receivedCommand = new UpdateWorkOrderCommand("id-1", "RECEIVED");
         final var preparingCommand = new UpdateWorkOrderCommand("id-2", "PREPARING");
         final var readyCommand = new UpdateWorkOrderCommand("id-3", "READY");
-        final var deliveredCommand = new UpdateWorkOrderCommand("id-4", "DELIVERED");
+        final var deliveredCommand = new UpdateWorkOrderCommand("id-4", "COMPLETED");
 
         // When
         useCase.execute(receivedCommand);
@@ -308,12 +308,12 @@ class DefaultUpdateWorkOrderUseCaseTest {
         verify(workOrderPort).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.RECEIVED));
         verify(workOrderPort).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.PREPARING));
         verify(workOrderPort).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.READY));
-        verify(workOrderPort).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.DELIVERED));
+        verify(workOrderPort).updateStatus(any(WorkOrderID.class), eq(WorkOrderStatus.COMPLETED));
         
         verify(notificationPort).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.RECEIVED));
         verify(notificationPort).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.PREPARING));
         verify(notificationPort).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.READY));
-        verify(notificationPort).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.DELIVERED));
+        verify(notificationPort).sendWorkOrderStatusUpdateNotification(any(WorkOrderID.class), eq(WorkOrderStatus.COMPLETED));
     }
 
     @Test

@@ -6,7 +6,7 @@ public enum WorkOrderStatus {
     RECEIVED,
     PREPARING,
     READY,
-    DELIVERED;
+    COMPLETED;
 
     public static WorkOrderStatus from(final String status) {
         return Arrays.stream(values())
