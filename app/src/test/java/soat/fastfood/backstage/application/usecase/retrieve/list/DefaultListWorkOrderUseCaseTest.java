@@ -1,6 +1,7 @@
 package soat.fastfood.backstage.application.usecase.retrieve.list;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -19,6 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("List Work Orders Use Case")
 class DefaultListWorkOrderUseCaseTest {
 
     @Mock
@@ -27,324 +29,395 @@ class DefaultListWorkOrderUseCaseTest {
     @InjectMocks
     private DefaultListWorkOrderUseCase useCase;
 
-    private WorkOrder workOrder1;
-    private WorkOrder workOrder2;
-    private WorkOrder workOrder3;
-
-    @BeforeEach
-    void setUp() {
-        final var items1 = List.of(
-                WorkOrderItem.create("Burger", 2),
-                WorkOrderItem.create("Fries", 1)
-        );
-        
-        final var items2 = List.of(
-                WorkOrderItem.create("Pizza", 1)
-        );
-        
-        final var items3 = List.of(
-                WorkOrderItem.create("Salad", 2),
-                WorkOrderItem.create("Juice", 2)
-        );
-        
-        workOrder1 = WorkOrder.create("order-1", "ORD-001", items1);
-        workOrder2 = WorkOrder.create("order-2", "ORD-002", items2);
-        workOrder3 = WorkOrder.create("order-3", "ORD-003", items3);
+    private WorkOrder createWorkOrderWithItems(String orderId, String orderNumber, List<WorkOrderItem> items) {
+        return WorkOrder.create(orderId, orderNumber, items);
     }
 
-    @Test
-    void shouldListWorkOrdersByStatusSuccessfully() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        final var workOrders = List.of(workOrder1, workOrder2);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(workOrders);
+    @Nested
+    @DisplayName("Given work orders with RECEIVED status exist")
+    class GivenWorkOrdersWithReceivedStatusExist {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When listing by RECEIVED status, Then should return all received work orders")
+        void whenListingByReceivedStatus_thenShouldReturnAllReceivedWorkOrders() {
+            // Given: multiple work orders with RECEIVED status exist
+            final var items1 = List.of(
+                    WorkOrderItem.create("Burger", 2),
+                    WorkOrderItem.create("Fries", 1)
+            );
+            final var items2 = List.of(WorkOrderItem.create("Pizza", 1));
+            final var workOrder1 = createWorkOrderWithItems("order-1", "ORD-001", items1);
+            final var workOrder2 = createWorkOrderWithItems("order-2", "ORD-002", items2);
+            final var command = new ListWorkOrderCommand("RECEIVED");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("ORD-001", result.get(0).orderNumber());
-        assertEquals("ORD-002", result.get(1).orderNumber());
-        assertEquals("RECEIVED", result.get(0).status());
-        
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(List.of(workOrder1, workOrder2));
+
+            // When: listing work orders by RECEIVED status
+            final var result = useCase.execute(command);
+
+            // Then: should return all received work orders with correct data
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            assertEquals("ORD-001", result.get(0).orderNumber());
+            assertEquals("ORD-002", result.get(1).orderNumber());
+            assertEquals("RECEIVED", result.get(0).status());
+
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
+        }
+
+        @Test
+        @DisplayName("When listing with single work order, Then should return list with one item")
+        void whenListingWithSingleWorkOrder_thenShouldReturnListWithOneItem() {
+            // Given: only one work order with RECEIVED status exists
+            final var items = List.of(WorkOrderItem.create("Burger", 2));
+            final var workOrder = createWorkOrderWithItems("order-1", "ORD-001", items);
+            final var command = new ListWorkOrderCommand("RECEIVED");
+
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(List.of(workOrder));
+
+            // When: listing work orders
+            final var result = useCase.execute(command);
+
+            // Then: should return single work order
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            assertEquals("ORD-001", result.get(0).orderNumber());
+        }
+
+        @Test
+        @DisplayName("When converting status string to enum, Then should use correct RECEIVED enum value")
+        void whenConvertingStatusStringToEnum_thenShouldUseCorrectReceivedEnumValue() {
+            // Given: a command with RECEIVED status string
+            final var command = new ListWorkOrderCommand("RECEIVED");
+
+            when(workOrderPort.findAllByStatus(any(WorkOrderStatus.class)))
+                    .thenReturn(Collections.emptyList());
+
+            // When: executing command
+            useCase.execute(command);
+
+            // Then: should call port with correct enum value
+            verify(workOrderPort).findAllByStatus(argThat(status ->
+                    status == WorkOrderStatus.RECEIVED
+            ));
+        }
     }
 
-    @Test
-    void shouldListWorkOrdersByPreparingStatus() {
-        // Given
-        final var command = new ListWorkOrderCommand("PREPARING");
-        final var workOrders = List.of(workOrder1);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.PREPARING))
-                .thenReturn(workOrders);
+    @Nested
+    @DisplayName("Given work orders with PREPARING status exist")
+    class GivenWorkOrdersWithPreparingStatusExist {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When listing by PREPARING status, Then should return all preparing work orders")
+        void whenListingByPreparingStatus_thenShouldReturnAllPreparingWorkOrders() {
+            // Given: work orders with PREPARING status exist
+            final var items = List.of(WorkOrderItem.create("Burger", 2));
+            final var workOrder = createWorkOrderWithItems("order-1", "ORD-001", items);
+            final var command = new ListWorkOrderCommand("PREPARING");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("ORD-001", result.get(0).orderNumber());
-        
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.PREPARING))
+                    .thenReturn(List.of(workOrder));
+
+            // When: listing by PREPARING status
+            final var result = useCase.execute(command);
+
+            // Then: should return preparing work orders
+            assertNotNull(result);
+            assertEquals(1, result.size());
+            assertEquals("ORD-001", result.get(0).orderNumber());
+
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
+        }
+
+        @Test
+        @DisplayName("When calling port, Then should use correct PREPARING status")
+        void whenCallingPort_thenShouldUseCorrectPreparingStatus() {
+            // Given: a command with PREPARING status
+            final var command = new ListWorkOrderCommand("PREPARING");
+
+            when(workOrderPort.findAllByStatus(any(WorkOrderStatus.class)))
+                    .thenReturn(Collections.emptyList());
+
+            // When: executing command
+            useCase.execute(command);
+
+            // Then: should call port with PREPARING status and no more interactions
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
+            verifyNoMoreInteractions(workOrderPort);
+        }
     }
 
-    @Test
-    void shouldListWorkOrdersByReadyStatus() {
-        // Given
-        final var command = new ListWorkOrderCommand("READY");
-        final var workOrders = List.of(workOrder2, workOrder3);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.READY))
-                .thenReturn(workOrders);
+    @Nested
+    @DisplayName("Given work orders with READY status exist")
+    class GivenWorkOrdersWithReadyStatusExist {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When listing by READY status, Then should return all ready work orders")
+        void whenListingByReadyStatus_thenShouldReturnAllReadyWorkOrders() {
+            // Given: work orders with READY status exist
+            final var items2 = List.of(WorkOrderItem.create("Pizza", 1));
+            final var items3 = List.of(
+                    WorkOrderItem.create("Salad", 2),
+                    WorkOrderItem.create("Juice", 2)
+            );
+            final var workOrder2 = createWorkOrderWithItems("order-2", "ORD-002", items2);
+            final var workOrder3 = createWorkOrderWithItems("order-3", "ORD-003", items3);
+            final var command = new ListWorkOrderCommand("READY");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("ORD-002", result.get(0).orderNumber());
-        assertEquals("ORD-003", result.get(1).orderNumber());
-        
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.READY);
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.READY))
+                    .thenReturn(List.of(workOrder2, workOrder3));
+
+            // When: listing by READY status
+            final var result = useCase.execute(command);
+
+            // Then: should return all ready work orders
+            assertNotNull(result);
+            assertEquals(2, result.size());
+            assertEquals("ORD-002", result.get(0).orderNumber());
+            assertEquals("ORD-003", result.get(1).orderNumber());
+
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.READY);
+        }
     }
 
-    @Test
-    void shouldListWorkOrdersByDeliveredStatus() {
-        // Given
-        final var command = new ListWorkOrderCommand("COMPLETED");
-        final var workOrders = List.of(workOrder1, workOrder2, workOrder3);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.COMPLETED))
-                .thenReturn(workOrders);
+    @Nested
+    @DisplayName("Given work orders with COMPLETED status exist")
+    class GivenWorkOrdersWithCompletedStatusExist {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When listing by COMPLETED status, Then should return all completed work orders")
+        void whenListingByCompletedStatus_thenShouldReturnAllCompletedWorkOrders() {
+            // Given: work orders with COMPLETED status exist
+            final var items1 = List.of(WorkOrderItem.create("Burger", 2));
+            final var items2 = List.of(WorkOrderItem.create("Pizza", 1));
+            final var items3 = List.of(WorkOrderItem.create("Salad", 2));
+            final var workOrder1 = createWorkOrderWithItems("order-1", "ORD-001", items1);
+            final var workOrder2 = createWorkOrderWithItems("order-2", "ORD-002", items2);
+            final var workOrder3 = createWorkOrderWithItems("order-3", "ORD-003", items3);
+            final var command = new ListWorkOrderCommand("COMPLETED");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(3, result.size());
-        
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.COMPLETED);
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.COMPLETED))
+                    .thenReturn(List.of(workOrder1, workOrder2, workOrder3));
+
+            // When: listing by COMPLETED status
+            final var result = useCase.execute(command);
+
+            // Then: should return all completed work orders
+            assertNotNull(result);
+            assertEquals(3, result.size());
+
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.COMPLETED);
+        }
     }
 
-    @Test
-    void shouldReturnEmptyListWhenNoWorkOrdersFound() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(Collections.emptyList());
+    @Nested
+    @DisplayName("Given no work orders exist")
+    class GivenNoWorkOrdersExist {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When listing by status, Then should return empty list")
+        void whenListingByStatus_thenShouldReturnEmptyList() {
+            // Given: no work orders exist for RECEIVED status
+            final var command = new ListWorkOrderCommand("RECEIVED");
 
-        // Then
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-        assertEquals(0, result.size());
-        
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(Collections.emptyList());
+
+            // When: listing work orders
+            final var result = useCase.execute(command);
+
+            // Then: should return empty list
+            assertNotNull(result);
+            assertTrue(result.isEmpty());
+            assertEquals(0, result.size());
+
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
+        }
+
+        @Test
+        @DisplayName("When use case is created, Then should not interact with port")
+        void whenUseCaseIsCreated_thenShouldNotInteractWithPort() {
+            // Given: use case is created but not executed
+
+            // Then: should not have any interaction with port
+            verifyNoInteractions(workOrderPort);
+        }
     }
 
-    @Test
-    void shouldMapWorkOrdersToOutputCorrectly() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        final var workOrders = List.of(workOrder1);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(workOrders);
+    @Nested
+    @DisplayName("Given work orders with multiple items")
+    class GivenWorkOrdersWithMultipleItems {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When listing, Then should return work orders with all items")
+        void whenListing_thenShouldReturnWorkOrdersWithAllItems() {
+            // Given: work orders with different number of items exist
+            final var items1 = List.of(
+                    WorkOrderItem.create("Burger", 2),
+                    WorkOrderItem.create("Fries", 1)
+            );
+            final var items2 = List.of(WorkOrderItem.create("Pizza", 1));
+            final var items3 = List.of(
+                    WorkOrderItem.create("Salad", 2),
+                    WorkOrderItem.create("Juice", 2)
+            );
+            final var workOrder1 = createWorkOrderWithItems("order-1", "ORD-001", items1);
+            final var workOrder2 = createWorkOrderWithItems("order-2", "ORD-002", items2);
+            final var workOrder3 = createWorkOrderWithItems("order-3", "ORD-003", items3);
+            final var command = new ListWorkOrderCommand("RECEIVED");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        
-        final var output = result.get(0);
-        assertNotNull(output.id());
-        assertNotNull(output.orderNumber());
-        assertNotNull(output.items());
-        assertNotNull(output.status());
-        assertNotNull(output.createdAt());
-        assertNotNull(output.updatedAt());
-        assertEquals(2, output.items().size());
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(List.of(workOrder1, workOrder2, workOrder3));
+
+            // When: listing work orders
+            final var result = useCase.execute(command);
+
+            // Then: should return all work orders with correct item counts
+            assertNotNull(result);
+            assertEquals(3, result.size());
+            assertEquals(2, result.get(0).items().size()); // workOrder1 has 2 items
+            assertEquals(1, result.get(1).items().size()); // workOrder2 has 1 item
+            assertEquals(2, result.get(2).items().size()); // workOrder3 has 2 items
+        }
+
+        @Test
+        @DisplayName("When listing large quantity, Then should handle correctly")
+        void whenListingLargeQuantity_thenShouldHandleCorrectly() {
+            // Given: a large list of work orders exists
+            final var items1 = List.of(WorkOrderItem.create("Burger", 2));
+            final var items2 = List.of(WorkOrderItem.create("Pizza", 1));
+            final var items3 = List.of(WorkOrderItem.create("Salad", 2));
+            final var workOrder1 = createWorkOrderWithItems("order-1", "ORD-001", items1);
+            final var workOrder2 = createWorkOrderWithItems("order-2", "ORD-002", items2);
+            final var workOrder3 = createWorkOrderWithItems("order-3", "ORD-003", items3);
+            final var command = new ListWorkOrderCommand("RECEIVED");
+            final var largeList = List.of(
+                    workOrder1, workOrder2, workOrder3,
+                    workOrder1, workOrder2, workOrder3,
+                    workOrder1, workOrder2, workOrder3
+            );
+
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(largeList);
+
+            // When: listing work orders
+            final var result = useCase.execute(command);
+
+            // Then: should return all work orders
+            assertNotNull(result);
+            assertEquals(9, result.size());
+
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
+        }
     }
 
-    @Test
-    void shouldHandleMultipleWorkOrdersWithDifferentItems() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        final var workOrders = List.of(workOrder1, workOrder2, workOrder3);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(workOrders);
+    @Nested
+    @DisplayName("Given output mapping scenarios")
+    class GivenOutputMappingScenarios {
 
-        // When
-        final var result = useCase.execute(command);
+        @Test
+        @DisplayName("When mapping work orders to output, Then should map all fields correctly")
+        void whenMappingWorkOrdersToOutput_thenShouldMapAllFieldsCorrectly() {
+            // Given: a work order with complete information
+            final var items = List.of(
+                    WorkOrderItem.create("Burger", 2),
+                    WorkOrderItem.create("Fries", 1)
+            );
+            final var workOrder = createWorkOrderWithItems("order-1", "ORD-001", items);
+            final var command = new ListWorkOrderCommand("RECEIVED");
 
-        // Then
-        assertNotNull(result);
-        assertEquals(3, result.size());
-        assertEquals(2, result.get(0).items().size()); // workOrder1 has 2 items
-        assertEquals(1, result.get(1).items().size()); // workOrder2 has 1 item
-        assertEquals(2, result.get(2).items().size()); // workOrder3 has 2 items
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(List.of(workOrder));
+
+            // When: listing work orders
+            final var result = useCase.execute(command);
+
+            // Then: all output fields should be mapped correctly
+            assertNotNull(result);
+            assertEquals(1, result.size());
+
+            final var output = result.get(0);
+            assertNotNull(output.id());
+            assertNotNull(output.orderNumber());
+            assertNotNull(output.items());
+            assertNotNull(output.status());
+            assertNotNull(output.createdAt());
+            assertNotNull(output.updatedAt());
+            assertEquals(2, output.items().size());
+        }
+
+        @Test
+        @DisplayName("When executing multiple times, Then should return new list instances")
+        void whenExecutingMultipleTimes_thenShouldReturnNewListInstances() {
+            // Given: a work order exists
+            final var items = List.of(WorkOrderItem.create("Burger", 2));
+            final var workOrder = createWorkOrderWithItems("order-1", "ORD-001", items);
+            final var command = new ListWorkOrderCommand("RECEIVED");
+
+            when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
+                    .thenReturn(List.of(workOrder));
+
+            // When: executing command multiple times
+            final var result1 = useCase.execute(command);
+            final var result2 = useCase.execute(command);
+
+            // Then: should return different list instances
+            assertNotNull(result1);
+            assertNotNull(result2);
+            assertNotSame(result1, result2);
+            assertEquals(result1.size(), result2.size());
+
+            verify(workOrderPort, times(2)).findAllByStatus(WorkOrderStatus.RECEIVED);
+        }
     }
 
-    @Test
-    void shouldCallPortWithCorrectStatus() {
-        // Given
-        final var command = new ListWorkOrderCommand("PREPARING");
-        
-        when(workOrderPort.findAllByStatus(any(WorkOrderStatus.class)))
-                .thenReturn(Collections.emptyList());
+    @Nested
+    @DisplayName("Given status validation scenarios")
+    class GivenStatusValidationScenarios {
 
-        // When
-        useCase.execute(command);
+        @Test
+        @DisplayName("When providing invalid status, Then should throw IllegalArgumentException")
+        void whenProvidingInvalidStatus_thenShouldThrowIllegalArgumentException() {
+            // Given: a command with invalid status
+            final var command = new ListWorkOrderCommand("INVALID_STATUS");
 
-        // Then
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
-        verifyNoMoreInteractions(workOrderPort);
-    }
+            // When & Then: should throw IllegalArgumentException
+            assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
 
-    @Test
-    void shouldThrowExceptionForInvalidStatus() {
-        // Given
-        final var command = new ListWorkOrderCommand("INVALID_STATUS");
+            verify(workOrderPort, never()).findAllByStatus(any(WorkOrderStatus.class));
+        }
 
-        // When & Then
-        assertThrows(IllegalArgumentException.class, () -> useCase.execute(command));
-        
-        verify(workOrderPort, never()).findAllByStatus(any(WorkOrderStatus.class));
-    }
+        @Test
+        @DisplayName("When verifying all status enum values, Then should work for all statuses")
+        void whenVerifyingAllStatusEnumValues_thenShouldWorkForAllStatuses() {
+            // Given: commands for all status types
+            when(workOrderPort.findAllByStatus(any(WorkOrderStatus.class)))
+                    .thenReturn(Collections.emptyList());
 
-    @Test
-    void shouldReturnListWithSingleWorkOrder() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        final var workOrders = List.of(workOrder1);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(workOrders);
+            // When: testing RECEIVED
+            final var commandReceived = new ListWorkOrderCommand("RECEIVED");
+            useCase.execute(commandReceived);
 
-        // When
-        final var result = useCase.execute(command);
+            // When: testing PREPARING
+            final var commandPreparing = new ListWorkOrderCommand("PREPARING");
+            useCase.execute(commandPreparing);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("ORD-001", result.get(0).orderNumber());
-    }
+            // When: testing READY
+            final var commandReady = new ListWorkOrderCommand("READY");
+            useCase.execute(commandReady);
 
-    @Test
-    void shouldConvertStatusStringToEnum() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        
-        when(workOrderPort.findAllByStatus(any(WorkOrderStatus.class)))
-                .thenReturn(Collections.emptyList());
+            // When: testing COMPLETED
+            final var commandCompleted = new ListWorkOrderCommand("COMPLETED");
+            useCase.execute(commandCompleted);
 
-        // When
-        useCase.execute(command);
-
-        // Then
-        verify(workOrderPort).findAllByStatus(argThat(status -> 
-                status == WorkOrderStatus.RECEIVED
-        ));
-    }
-
-    @Test
-    void shouldHandleLargeListOfWorkOrders() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        final var largeList = List.of(
-                workOrder1, workOrder2, workOrder3,
-                workOrder1, workOrder2, workOrder3,
-                workOrder1, workOrder2, workOrder3
-        );
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(largeList);
-
-        // When
-        final var result = useCase.execute(command);
-
-        // Then
-        assertNotNull(result);
-        assertEquals(9, result.size());
-        
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
-    }
-
-    @Test
-    void shouldNotInteractWithPortBeforeExecution() {
-        // Given - useCase is created but execute is not called yet
-
-        // Then
-        verifyNoInteractions(workOrderPort);
-    }
-
-    @Test
-    void shouldReturnNewListInstanceForEachExecution() {
-        // Given
-        final var command = new ListWorkOrderCommand("RECEIVED");
-        final var workOrders = List.of(workOrder1);
-        
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(workOrders);
-
-        // When
-        final var result1 = useCase.execute(command);
-        final var result2 = useCase.execute(command);
-
-        // Then
-        assertNotNull(result1);
-        assertNotNull(result2);
-        assertNotSame(result1, result2);
-        assertEquals(result1.size(), result2.size());
-        
-        verify(workOrderPort, times(2)).findAllByStatus(WorkOrderStatus.RECEIVED);
-    }
-
-    @Test
-    void shouldVerifyAllStatusEnumValues() {
-        // Test RECEIVED
-        final var commandReceived = new ListWorkOrderCommand("RECEIVED");
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.RECEIVED))
-                .thenReturn(Collections.emptyList());
-        useCase.execute(commandReceived);
-
-        // Test PREPARING
-        final var commandPreparing = new ListWorkOrderCommand("PREPARING");
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.PREPARING))
-                .thenReturn(Collections.emptyList());
-        useCase.execute(commandPreparing);
-
-        // Test READY
-        final var commandReady = new ListWorkOrderCommand("READY");
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.READY))
-                .thenReturn(Collections.emptyList());
-        useCase.execute(commandReady);
-
-        // Test DELIVERED
-        final var commandDelivered = new ListWorkOrderCommand("COMPLETED");
-        when(workOrderPort.findAllByStatus(WorkOrderStatus.COMPLETED))
-                .thenReturn(Collections.emptyList());
-        useCase.execute(commandDelivered);
-
-        // Then
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.READY);
-        verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.COMPLETED);
+            // Then: should have called port with each status exactly once
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.RECEIVED);
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.PREPARING);
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.READY);
+            verify(workOrderPort, times(1)).findAllByStatus(WorkOrderStatus.COMPLETED);
+        }
     }
 }
 

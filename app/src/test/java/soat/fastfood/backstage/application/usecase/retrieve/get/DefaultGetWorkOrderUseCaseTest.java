@@ -1,6 +1,7 @@
 package soat.fastfood.backstage.application.usecase.retrieve.get;
 
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,6 +21,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@DisplayName("Get Work Order Use Case")
 class DefaultGetWorkOrderUseCaseTest {
 
     @Mock
@@ -28,231 +30,285 @@ class DefaultGetWorkOrderUseCaseTest {
     @InjectMocks
     private DefaultGetWorkOrderUseCase useCase;
 
-    private String validWorkOrderId;
-    private WorkOrder validWorkOrder;
+    @Nested
+    @DisplayName("Given a valid work order exists")
+    class GivenValidWorkOrderExists {
 
-    @BeforeEach
-    void setUp() {
-        validWorkOrderId = "work-order-123";
-        
-        final var items = List.of(
-                WorkOrderItem.create("Burger", 2),
-                WorkOrderItem.create("Fries", 1)
-        );
-        
-        validWorkOrder = WorkOrder.create(
-                "order-456",
-                "ORD-001",
-                items
-        );
+        @Test
+        @DisplayName("When retrieving by id, Then should return work order successfully")
+        void whenRetrievingById_thenShouldReturnWorkOrderSuccessfully() {
+            // Given: a valid work order exists in the system
+            final var workOrderId = "work-order-123";
+            final var items = List.of(
+                    WorkOrderItem.create("Burger", 2),
+                    WorkOrderItem.create("Fries", 1)
+            );
+            final var workOrder = WorkOrder.create("order-456", "ORD-001", items);
+            final var command = new GetWorkOrderCommand(workOrderId);
+
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
+
+            // When: retrieving the work order
+            final var output = useCase.execute(command);
+
+            // Then: should return complete work order information
+            assertNotNull(output);
+            assertEquals("ORD-001", output.orderNumber());
+            assertEquals(2, output.items().size());
+            assertEquals("Burger", output.items().get(0).name());
+            assertEquals(2, output.items().get(0).quantity());
+            assertEquals("RECEIVED", output.status());
+            assertNotNull(output.createdAt());
+            assertNotNull(output.updatedAt());
+
+            verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        }
+
+        @Test
+        @DisplayName("When retrieving by different id, Then should return correct work order")
+        void whenRetrievingByDifferentId_thenShouldReturnCorrectWorkOrder() {
+            // Given: a work order with different id exists
+            final var differentId = "different-id-789";
+            final var items = List.of(WorkOrderItem.create("Pizza", 1));
+            final var workOrder = WorkOrder.create("order-456", "ORD-001", items);
+            final var command = new GetWorkOrderCommand(differentId);
+
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
+
+            // When: retrieving by this id
+            final var output = useCase.execute(command);
+
+            // Then: should return the correct work order
+            assertNotNull(output);
+            assertEquals("ORD-001", output.orderNumber());
+            verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        }
+
+        @Test
+        @DisplayName("When retrieving with UUID format, Then should handle correctly")
+        void whenRetrievingWithUuidFormat_thenShouldHandleCorrectly() {
+            // Given: a work order with UUID format id
+            final var uuidId = "550e8400-e29b-41d4-a716-446655440000";
+            final var items = List.of(WorkOrderItem.create("Burger", 1));
+            final var workOrder = WorkOrder.create("order-456", "ORD-001", items);
+            final var command = new GetWorkOrderCommand(uuidId);
+
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
+
+            // When: retrieving with UUID format
+            final var output = useCase.execute(command);
+
+            // Then: should retrieve successfully
+            assertNotNull(output);
+            verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        }
     }
 
-    @Test
-    void shouldRetrieveWorkOrderSuccessfully() {
-        // Given
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(validWorkOrder));
+    @Nested
+    @DisplayName("Given a work order with single item")
+    class GivenWorkOrderWithSingleItem {
 
-        // When
-        final var output = useCase.execute(command);
+        @Test
+        @DisplayName("When retrieving, Then should return work order with one item")
+        void whenRetrieving_thenShouldReturnWorkOrderWithOneItem() {
+            // Given: a work order with single item exists
+            final var workOrderId = "work-order-123";
+            final var items = List.of(WorkOrderItem.create("Pizza", 1));
+            final var workOrder = WorkOrder.create("order-123", "ORD-002", items);
+            final var command = new GetWorkOrderCommand(workOrderId);
 
-        // Then
-        assertNotNull(output);
-        assertEquals("ORD-001", output.orderNumber());
-        assertEquals(2, output.items().size());
-        assertEquals("Burger", output.items().get(0).name());
-        assertEquals(2, output.items().get(0).quantity());
-        assertEquals("RECEIVED", output.status());
-        assertNotNull(output.createdAt());
-        assertNotNull(output.updatedAt());
-        
-        verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
+
+            // When: retrieving the work order
+            final var output = useCase.execute(command);
+
+            // Then: should return work order with single item
+            assertNotNull(output);
+            assertEquals(1, output.items().size());
+            assertEquals("Pizza", output.items().get(0).name());
+            assertEquals(1, output.items().get(0).quantity());
+        }
     }
 
-    @Test
-    void shouldThrowNotFoundExceptionWhenWorkOrderDoesNotExist() {
-        // Given
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.empty());
+    @Nested
+    @DisplayName("Given a work order with multiple items")
+    class GivenWorkOrderWithMultipleItems {
 
-        // When & Then
-        final var exception = assertThrows(NotFoundException.class, 
-                () -> useCase.execute(command));
-        
-        assertNotNull(exception);
-        assertTrue(exception.getMessage().contains("workorder"));
-        assertTrue(exception.getMessage().contains("not found"));
-        
-        verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        @Test
+        @DisplayName("When retrieving, Then should return all items correctly")
+        void whenRetrieving_thenShouldReturnAllItemsCorrectly() {
+            // Given: a work order with multiple items exists
+            final var workOrderId = "work-order-123";
+            final var items = List.of(
+                    WorkOrderItem.create("Burger", 2),
+                    WorkOrderItem.create("Fries", 3),
+                    WorkOrderItem.create("Soda", 1),
+                    WorkOrderItem.create("Salad", 2)
+            );
+            final var workOrder = WorkOrder.create("order-999", "ORD-003", items);
+            final var command = new GetWorkOrderCommand(workOrderId);
+
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
+
+            // When: retrieving the work order
+            final var output = useCase.execute(command);
+
+            // Then: should return all items in order
+            assertNotNull(output);
+            assertEquals(4, output.items().size());
+            assertEquals("Burger", output.items().get(0).name());
+            assertEquals("Salad", output.items().get(3).name());
+        }
     }
 
-    @Test
-    void shouldRetrieveWorkOrderWithDifferentId() {
-        // Given
-        final var differentId = "different-id-789";
-        final var command = new GetWorkOrderCommand(differentId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(validWorkOrder));
+    @Nested
+    @DisplayName("Given work order does not exist")
+    class GivenWorkOrderDoesNotExist {
 
-        // When
-        final var output = useCase.execute(command);
+        @Test
+        @DisplayName("When retrieving, Then should throw NotFoundException")
+        void whenRetrieving_thenShouldThrowNotFoundException() {
+            // Given: work order does not exist in the system
+            final var workOrderId = "work-order-123";
+            final var command = new GetWorkOrderCommand(workOrderId);
 
-        // Then
-        assertNotNull(output);
-        assertEquals("ORD-001", output.orderNumber());
-        verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.empty());
+
+            // When & Then: should throw NotFoundException
+            final var exception = assertThrows(NotFoundException.class,
+                    () -> useCase.execute(command));
+
+            assertNotNull(exception);
+            assertTrue(exception.getMessage().contains("workorder"));
+            assertTrue(exception.getMessage().contains("not found"));
+
+            verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        }
+
+        @Test
+        @DisplayName("When retrieving with non-existent id, Then should throw exception")
+        void whenRetrievingWithNonExistentId_thenShouldThrowException() {
+            // Given: a non-existent work order id
+            final var nonExistentId = "non-existent-id";
+            final var command = new GetWorkOrderCommand(nonExistentId);
+
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.empty());
+
+            // When & Then: should throw NotFoundException
+            assertThrows(NotFoundException.class, () -> useCase.execute(command));
+            verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        }
+
+        @Test
+        @DisplayName("When port returns empty, Then should throw NotFoundException")
+        void whenPortReturnsEmpty_thenShouldThrowNotFoundException() {
+            // Given: port returns empty optional
+            final var command = new GetWorkOrderCommand("any-id");
+
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.empty());
+
+            // When & Then: should throw NotFoundException with message
+            final var exception = assertThrows(NotFoundException.class,
+                    () -> useCase.execute(command));
+
+            assertNotNull(exception.getMessage());
+            verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
+        }
     }
 
-    @Test
-    void shouldRetrieveWorkOrderWithSingleItem() {
-        // Given
-        final var items = List.of(WorkOrderItem.create("Pizza", 1));
-        final var workOrder = WorkOrder.create("order-123", "ORD-002", items);
+    @Nested
+    @DisplayName("Given port interaction scenarios")
+    class GivenPortInteractionScenarios {
 
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(workOrder));
+        @Test
+        @DisplayName("When executing command, Then should call port with correct id")
+        void whenExecutingCommand_thenShouldCallPortWithCorrectId() {
+            // Given: a valid command with specific id
+            final var workOrderId = "work-order-123";
+            final var items = List.of(WorkOrderItem.create("Burger", 1));
+            final var workOrder = WorkOrder.create("order-456", "ORD-001", items);
+            final var command = new GetWorkOrderCommand(workOrderId);
 
-        // When
-        final var output = useCase.execute(command);
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
 
-        // Then
-        assertNotNull(output);
-        assertEquals(1, output.items().size());
-        assertEquals("Pizza", output.items().get(0).name());
-        assertEquals(1, output.items().get(0).quantity());
+            // When: executing the command
+            useCase.execute(command);
+
+            // Then: should call port with correct work order id
+            verify(workOrderPort, times(1)).findById(argThat(id ->
+                    id.getValue().equals(workOrderId)
+            ));
+        }
+
+        @Test
+        @DisplayName("When use case is created, Then should not interact with port")
+        void whenUseCaseIsCreated_thenShouldNotInteractWithPort() {
+            // Given: use case is created but not executed
+
+            // Then: should not have any interaction with port
+            verifyNoInteractions(workOrderPort);
+        }
     }
 
-    @Test
-    void shouldRetrieveWorkOrderWithMultipleItems() {
-        // Given
-        final var items = List.of(
-                WorkOrderItem.create("Burger", 2),
-                WorkOrderItem.create("Fries", 3),
-                WorkOrderItem.create("Soda", 1),
-                WorkOrderItem.create("Salad", 2)
-        );
-        final var workOrder = WorkOrder.create("order-999", "ORD-003", items);
+    @Nested
+    @DisplayName("Given output mapping scenarios")
+    class GivenOutputMappingScenarios {
 
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(workOrder));
+        @Test
+        @DisplayName("When retrieving, Then should map all output fields correctly")
+        void whenRetrieving_thenShouldMapAllOutputFieldsCorrectly() {
+            // Given: a work order with complete information
+            final var workOrderId = "work-order-123";
+            final var items = List.of(WorkOrderItem.create("Burger", 1));
+            final var workOrder = WorkOrder.create("order-456", "ORD-001", items);
+            final var command = new GetWorkOrderCommand(workOrderId);
 
-        // When
-        final var output = useCase.execute(command);
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
 
-        // Then
-        assertNotNull(output);
-        assertEquals(4, output.items().size());
-        assertEquals("Burger", output.items().get(0).name());
-        assertEquals("Salad", output.items().get(3).name());
-    }
+            // When: retrieving the work order
+            final var output = useCase.execute(command);
 
-    @Test
-    void shouldThrowNotFoundExceptionWithNonExistentId() {
-        // Given
-        final var nonExistentId = "non-existent-id";
-        final var command = new GetWorkOrderCommand(nonExistentId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.empty());
+            // Then: all output fields should be mapped correctly
+            assertNotNull(output.id());
+            assertNotNull(output.orderNumber());
+            assertNotNull(output.items());
+            assertNotNull(output.status());
+            assertNotNull(output.createdAt());
+            assertNotNull(output.updatedAt());
+        }
 
-        // When & Then
-        assertThrows(NotFoundException.class, () -> useCase.execute(command));
-        verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
-    }
+        @Test
+        @DisplayName("When mapping domain to output, Then should preserve all data")
+        void whenMappingDomainToOutput_thenShouldPreserveAllData() {
+            // Given: a work order domain entity
+            final var workOrderId = "work-order-123";
+            final var items = List.of(WorkOrderItem.create("Burger", 2));
+            final var workOrder = WorkOrder.create("order-456", "ORD-001", items);
+            final var command = new GetWorkOrderCommand(workOrderId);
 
-    @Test
-    void shouldCallPortWithCorrectWorkOrderId() {
-        // Given
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(validWorkOrder));
+            when(workOrderPort.findById(any(WorkOrderID.class)))
+                    .thenReturn(Optional.of(workOrder));
 
-        // When
-        useCase.execute(command);
+            // When: mapping to output
+            final var output = useCase.execute(command);
 
-        // Then
-        verify(workOrderPort, times(1)).findById(argThat(id -> 
-                id.getValue().equals(validWorkOrderId)
-        ));
-    }
-
-    @Test
-    void shouldReturnCorrectOutputFields() {
-        // Given
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(validWorkOrder));
-
-        // When
-        final var output = useCase.execute(command);
-
-        // Then
-        assertNotNull(output.id());
-        assertNotNull(output.orderNumber());
-        assertNotNull(output.items());
-        assertNotNull(output.status());
-        assertNotNull(output.createdAt());
-        assertNotNull(output.updatedAt());
-    }
-
-    @Test
-    void shouldThrowNotFoundExceptionWithEmptyOptional() {
-        // Given
-        final var command = new GetWorkOrderCommand("any-id");
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.empty());
-
-        // When & Then
-        final var exception = assertThrows(NotFoundException.class, 
-                () -> useCase.execute(command));
-        
-        assertNotNull(exception.getMessage());
-        verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
-    }
-
-    @Test
-    void shouldNotInteractWithPortBeforeExecution() {
-        // Given - useCase is created but execute is not called yet
-
-        // Then
-        verifyNoInteractions(workOrderPort);
-    }
-
-    @Test
-    void shouldRetrieveWorkOrderWithUUIDFormat() {
-        // Given
-        final var uuidId = "550e8400-e29b-41d4-a716-446655440000";
-        final var command = new GetWorkOrderCommand(uuidId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(validWorkOrder));
-
-        // When
-        final var output = useCase.execute(command);
-
-        // Then
-        assertNotNull(output);
-        verify(workOrderPort, times(1)).findById(any(WorkOrderID.class));
-    }
-
-    @Test
-    void shouldMapWorkOrderToOutputCorrectly() {
-        // Given
-        final var command = new GetWorkOrderCommand(validWorkOrderId);
-        when(workOrderPort.findById(any(WorkOrderID.class)))
-                .thenReturn(Optional.of(validWorkOrder));
-
-        // When
-        final var output = useCase.execute(command);
-
-        // Then
-        assertEquals(validWorkOrder.getOrderNumber(), output.orderNumber());
-        assertEquals(validWorkOrder.getStatus().name(), output.status());
-        assertEquals(validWorkOrder.getItems().size(), output.items().size());
-        assertEquals(validWorkOrder.getCreatedAt(), output.createdAt());
-        assertEquals(validWorkOrder.getUpdatedAt(), output.updatedAt());
+            // Then: should preserve all domain data
+            assertEquals(workOrder.getOrderNumber(), output.orderNumber());
+            assertEquals(workOrder.getStatus().name(), output.status());
+            assertEquals(workOrder.getItems().size(), output.items().size());
+            assertEquals(workOrder.getCreatedAt(), output.createdAt());
+            assertEquals(workOrder.getUpdatedAt(), output.updatedAt());
+        }
     }
 }
 
