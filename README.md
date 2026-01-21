@@ -5,8 +5,19 @@
 
 Serviço de gerenciamento de pedidos na cozinha (backstage) do sistema FastFood SOAT. Este microserviço é responsável por receber pedidos através de filas SQS, gerenciar o status de preparação e notificar atualizações de status.
 
+## 📊 Qualidade de Código
+
+O projeto mantém altos padrões de qualidade com análise contínua via SonarQube Cloud:
+
+### Qualidade Geral do Código
+![SonarQube Overall Code Quality](sonar-overall-code.png)
+
+### Qualidade de Pull Requests
+![SonarQube PR Quality](sonar-pr-quality.png)
+
 ## 📋 Índice
 
+- [Qualidade de Código](#-qualidade-de-código)
 - [Funcionalidades](#-funcionalidades)
 - [Arquitetura](#-arquitetura)
 - [Tecnologias](#-tecnologias)
